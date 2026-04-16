@@ -172,7 +172,17 @@ router.post("/voice", upload.single("audio"), async (req, res) => {
     audioPath = req.file.path;
 
     const formData = new FormData();
-    formData.append("audio", fs.createReadStream(audioPath));
+    // formData.append("audio", fs.createReadStream(audioPath));
+//     formData.append("audio", fs.createReadStream(audioPath), {
+//   filename: "audio.wav",
+//   contentType: "audio/wav"
+// });
+const fileBuffer = fs.readFileSync(audioPath);
+
+formData.append("audio", fileBuffer, {
+  filename: "audio.wav",
+  contentType: "audio/wav"
+});
 
     console.log("🎤 Sending audio to Whisper...");
 
@@ -181,7 +191,11 @@ router.post("/voice", upload.single("audio"), async (req, res) => {
       "https://ey200506-new-ai-backend.hf.space/speech-to-text",
       formData,
       {
-        headers: formData.getHeaders(),
+        // headers: formData.getHeaders(),
+        headers: {
+  ...formData.getHeaders(),
+  "Accept": "application/json"
+},
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
          timeout: 120000 
