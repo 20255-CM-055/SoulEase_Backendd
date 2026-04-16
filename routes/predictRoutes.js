@@ -183,7 +183,8 @@ router.post("/voice", upload.single("audio"), async (req, res) => {
       {
         headers: formData.getHeaders(),
         maxContentLength: Infinity,
-        maxBodyLength: Infinity
+        maxBodyLength: Infinity,
+         timeout: 120000 
       }
     );
 
