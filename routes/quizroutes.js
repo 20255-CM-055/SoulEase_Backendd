@@ -1,3 +1,5 @@
+
+
 const Groq = require("groq-sdk");
 
 const groq = new Groq({
@@ -24,13 +26,6 @@ Format:
   }
 ]
 `;
-//     const response = await axios.post(
-//   `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-//   {
-//     contents: [{ parts: [{ text: prompt }] }]
-//   }
-// );
-//     const text = response.data.candidates[0].content.parts[0].text;
 
 const completion = await groq.chat.completions.create({
   model: "llama-3.1-8b-instant",
@@ -75,26 +70,47 @@ Return ONLY valid JSON:
 
 const text = completion.choices[0].message.content;
    
-    // const jsonMatch = text.match(/\{[\s\S]*\}/);
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
+//     // const jsonMatch = text.match(/\{[\s\S]*\}/);
+//     const jsonMatch = text.match(/\[[\s\S]*\]/);
 
-if (!jsonMatch) {
-  console.log("❌ No JSON found:", text);
-  return res.status(500).json({ error: "Invalid AI response" });
-}
+// if (!jsonMatch) {
+//   console.log("❌ No JSON found:", text);
+//   return res.status(500).json({ error: "Invalid AI response" });
+// }
 
-const cleanText = jsonMatch[0];
+// const cleanText = jsonMatch[0];
 
-    // res.json(JSON.parse(cleanText));
-    console.log("Gemini raw response:", text);
-    try {
-  const parsed = JSON.parse(cleanText);
-  res.json(parsed);
+//     // res.json(JSON.parse(cleanText));
+//     console.log("Gemini raw response:", text);
+//     try {
+//   const parsed = JSON.parse(cleanText);
+//   res.json(parsed);
+// } catch (e) {
+//   console.log("❌ JSON Parse Error:");
+//   console.log(cleanText);   // 👈 VERY IMPORTANT
+//   res.status(500).json({ error: "Invalid AI response" });
+// }
+let parsed;
+
+try {
+  parsed = JSON.parse(text);
 } catch (e) {
-  console.log("❌ JSON Parse Error:");
-  console.log(cleanText);   // 👈 VERY IMPORTANT
-  res.status(500).json({ error: "Invalid AI response" });
+  const jsonMatch = text.match(/\[[\s\S]*\]/);
+
+  if (!jsonMatch) {
+    console.log("❌ RAW AI RESPONSE:", text);
+    return res.status(500).json({ error: "Invalid AI response" });
+  }
+
+  try {
+    parsed = JSON.parse(jsonMatch[0]);
+  } catch (err) {
+    console.log("❌ FINAL PARSE FAIL:", jsonMatch[0]);
+    return res.status(500).json({ error: "Invalid AI response" });
+  }
 }
+
+res.json(parsed);
 
 //   } catch (err) {
 //     console.log(err);
@@ -110,80 +126,6 @@ const cleanText = jsonMatch[0];
   });
 }
 });
-
-// router.post("/analyze-quiz", async (req, res) => {
-//   try {
-//     const { answers } = req.body;
-
-//     const prompt = `
-// User answered the following mental wellness quiz:
-
-// ${JSON.stringify(answers)}
-
-// Based on this, give:
-// 1. A short supportive message
-// 2. One practical action they can do right now
-
-// Return ONLY JSON:
-// {
-//   "message": "string",
-//   "action": "string"
-// }
-// `;
-
-//     const response = await axios.post(
-//   `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-//   {
-//     contents: [{ parts: [{ text: prompt }] }]
-//   }
-// );
-
-//     const text = response.data.candidates[0].content.parts[0].text;
-
-//     const jsonMatch = text.match(/\{[\s\S]*\}/);
-// if (!jsonMatch) {
-//   console.log("❌ No JSON found:", text);
-//   return res.status(500).json({ error: "Invalid AI response" });
-// }
-
-// const cleanText = jsonMatch[0];
-
-//     console.log("Gemini raw response:", text);
-//     // res.json(JSON.parse(cleanText));
-//     try {
-//   // const parsed = JSON.parse(cleanText);
-//   let parsed;
-
-// try {
-//   parsed = JSON.parse(cleanText);
-// } catch (e) {
-//   console.log("❌ JSON Parse Error:");
-//   console.log(cleanText);
-
-//   return res.status(500).json({
-//     error: "Invalid AI response",
-//   });
-// }
-
-// if (!Array.isArray(parsed)) {
-//   return res.status(500).json({
-//     error: "AI returned invalid format",
-//   });
-// }
-
-// res.json(parsed);
-//   res.json(parsed);
-// } catch (e) {
-//   console.log("❌ JSON Parse Error:");
-//   console.log(cleanText);   // 👈 VERY IMPORTANT
-//   res.status(500).json({ error: "Invalid AI response" });
-// }
-
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).json({ error: "Quiz analysis failed" });
-//   }
-// });
 
 
 router.post("/analyze-quiz", async (req, res) => {
